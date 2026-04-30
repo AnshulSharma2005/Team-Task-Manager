@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import { Mail, Lock, ChevronLeft, ChevronRight, Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -8,6 +8,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [index, setIndex] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
 
   const quotes = [
     "Discipline turns goals into results when you show up consistently, even on days you don’t feel like it.",
@@ -38,7 +39,7 @@ export default function Login() {
     <div className="min-h-screen flex flex-wrap items-center justify-center md:justify-between gap-8 px-6 md:px-20 py-10
     bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#6d28d9]">
 
-      {/* LEFT: QUOTE CARD */}
+      {/* LEFT : QUOTE CARD */}
       <div className="w-full md:w-[45%] flex justify-center md:justify-start">
        <div className="bg-[#0b1220]/80 backdrop-blur-xl border border-white/10
 rounded-3xl p-10 w-full max-w-lg h-[420px]
@@ -97,7 +98,7 @@ shadow-xl hover:shadow-blue-500/20 transition flex flex-col justify-between">
 </div>
       </div>
 
-      {/* RIGHT: LOGIN CARD */}
+      {/* RIGHT : LOGIN CARD */}
       <div className="w-full md:w-[45%] flex justify-center md:justify-end">
         <div className="bg-[#0b1220]/90 backdrop-blur-xl border border-white/10
         rounded-3xl p-8 md:p-10 w-full max-w-lg
@@ -121,50 +122,67 @@ shadow-xl hover:shadow-blue-500/20 transition flex flex-col justify-between">
 
             {/* Email */}
             <div className="mb-4">
-              <label className="text-gray-300 text-sm mb-2 block">
-                Email Address
-              </label>
+  <label className="text-gray-300 text-sm mb-2 block">
+    Email Address
+  </label>
 
-              <div className="flex items-center bg-[#1f2937] rounded-lg border border-gray-600
-              hover:border-cyan-400 hover:shadow-cyan-400/20 transition
-              focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-400/30">
+  <div className="flex items-center bg-[#1f2937] rounded-lg border border-gray-600
+  hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-400/20
+  focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-400/30
+  transition px-3">
 
-                <Mail className="ml-3 text-gray-400" size={18} />
+    <Mail className="text-gray-400 mr-2" size={18} />
 
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="w-full p-3 bg-transparent text-white outline-none"
-                />
-              </div>
-            </div>
+    <input
+      type="email"
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+      placeholder="Enter your email"
+      className="w-full py-3 bg-transparent text-white outline-none"
+    />
+  </div>
+</div>
 
             {/* Password */}
-            <div className="mb-3">
-              <label className="text-gray-300 text-sm mb-2 block">
-                Password
-              </label>
+           <div className="mb-3">
+  <label className="text-gray-300 text-sm mb-2 block">
+    Password
+  </label>
 
-              <div className="flex items-center bg-[#1f2937] rounded-lg border border-gray-600
-              hover:border-purple-400 hover:shadow-purple-400/20 transition
-              focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-400/30">
+  <div className="flex items-center bg-[#1f2937] rounded-lg border border-gray-600
+  hover:border-purple-400 hover:shadow-lg hover:shadow-purple-400/20
+  focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-400/30
+  transition px-3">
 
-                <Lock className="ml-3 text-gray-400" size={18} />
+    <Lock className="text-gray-400 mr-2" size={18} />
 
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="w-full p-3 bg-transparent text-white outline-none"
-                />
-              </div>
-            </div>
+    <input
+      type={showPassword ? "text" : "password"}
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      placeholder="Enter your password"
+      className="flex-1 py-3 bg-transparent text-white outline-none"
+    />
 
-            <div className="text-right text-sm text-cyan-400 hover:underline cursor-pointer mb-5">
-              Forgot password?
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      className="ml-2 text-gray-400 hover:text-cyan-400 transition flex items-center"
+    >
+      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+    </button>
+
+  </div>
+</div>
+
+           {/* Forgot Password (RIGHT ALIGNED + SPACING FIX) */}
+            <div className="flex justify-end mt-2 mb-4">
+              <span
+                onClick={() => navigate("/forgot-password")}
+                className="text-cyan-400 text-sm cursor-pointer hover:underline transition"
+              >
+                Forgot password?
+              </span>
             </div>
 
             {/* Button */}

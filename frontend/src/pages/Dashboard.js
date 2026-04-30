@@ -1,118 +1,201 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from "react";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { LogOut, PlusCircle } from "lucide-react";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("");
+  const navigate = useNavigate();
 
-  const fetchTasks = () => {
-    axios.get('http://localhost:5000/api/tasks')
-      .then(res => setTasks(res.data));
+  const API = "http://localhost:5000/api/tasks";
+
+  const userEmail = localStorage.getItem("userEmail");
+  const userRole = localStorage.getItem("userRole");
+
+  // 🔥 FETCH TASKS (ROLE BASED)
+  const fetchTasks = async () => {
+    try {
+      let url = API;
+
+      // Member → only their tasks
+      if (userRole === "Member") {
+        url = `${API}?assignedTo=${userEmail}`;
+      }
+
+      const res = await axios.get(url);
+      setTasks(res.data);
+
+    } catch (err) {
+      toast.error("Failed to load tasks");
+    }
   };
 
   useEffect(() => {
     fetchTasks();
   }, []);
 
-  const addTask = () => {
-    if (!title) return;
+  // 🔥 ADD TASK
+  const addTask = async () => {
+    if (!title) return toast.error("Task cannot be empty");
 
-    axios.post('http://localhost:5000/api/tasks', {
-      title,
-      status: "Pending"
-    }).then(() => {
+    try {
+      await axios.post(API, {
+        title,
+        status: "Pending",
+        createdBy: userEmail,
+        assignedTo: userEmail,
+        projectId: "default-project",
+        priority: "Medium",
+        deadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+      });
+
+      toast.success("Task added 🚀");
       setTitle("");
       fetchTasks();
-    });
+
+    } catch (err) {
+      toast.error("Error adding task ❌");
+    }
   };
 
-  const updateStatus = (id, status) => {
-    axios.put(`http://localhost:5000/api/tasks/${id}`, { status })
-      .then(fetchTasks);
+  // 🔥 UPDATE STATUS
+  const updateStatus = async (id, status) => {
+    try {
+      await axios.put(`${API}/${id}`, { status });
+      toast.success("Task updated");
+      fetchTasks();
+    } catch {
+      toast.error("Update failed");
+    }
+  };
+
+  // 🔥 DELETE TASK (Admin only)
+  const deleteTask = async (id) => {
+    try {
+      await axios.delete(`${API}/${id}`);
+      toast.success("Task deleted");
+      fetchTasks();
+    } catch {
+      toast.error("Delete failed");
+    }
+  };
+
+  // LOGOUT
+  const handleLogout = () => {
+    localStorage.clear();
+    toast.success("Logged out");
+    navigate("/");
   };
 
   const completed = tasks.filter(t => t.status === "Completed").length;
   const pending = tasks.length - completed;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#7c3aed] p-6 text-white">
 
       {/* HEADER */}
-      <h1 className="text-4xl font-bold text-gray-800 mb-6">
-        🚀 Team Task Manager
-      </h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">
+          🚀 Dashboard ({userRole})
+        </h1>
 
-      {/* STATS CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        
-        <div className="bg-white rounded-xl shadow p-5 border-l-4 border-blue-500">
-          <h2 className="text-gray-500">Total Tasks</h2>
-          <p className="text-2xl font-bold">{tasks.length}</p>
-        </div>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg"
+        >
+          <LogOut size={18} /> Logout
+        </button>
+      </div>
 
-        <div className="bg-white rounded-xl shadow p-5 border-l-4 border-green-500">
-          <h2 className="text-gray-500">Completed</h2>
-          <p className="text-2xl font-bold text-green-600">{completed}</p>
-        </div>
-
-        <div className="bg-white rounded-xl shadow p-5 border-l-4 border-yellow-500">
-          <h2 className="text-gray-500">Pending</h2>
-          <p className="text-2xl font-bold text-yellow-600">{pending}</p>
-        </div>
-
+      {/* STATS */}
+      <div className="grid md:grid-cols-3 gap-5 mb-8">
+        <Stat title="Total Tasks" value={tasks.length} />
+        <Stat title="Completed" value={completed} color="text-green-400" />
+        <Stat title="Pending" value={pending} color="text-yellow-400" />
       </div>
 
       {/* ADD TASK */}
-      <div className="bg-white p-4 rounded-xl shadow mb-6 flex gap-3">
+      <div className="bg-[#0b1220]/80 p-5 rounded-xl border border-white/10 flex gap-3 mb-8">
         <input
           value={title}
           onChange={e => setTitle(e.target.value)}
           placeholder="Enter new task..."
-          className="flex-1 border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-400"
+          className="flex-1 bg-white/10 p-3 rounded-lg outline-none"
         />
+
         <button
           onClick={addTask}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg transition"
+          className="bg-gradient-to-r from-cyan-500 to-purple-500 px-5 py-2 rounded-lg"
         >
-          + Add
+          <PlusCircle size={18} />
         </button>
       </div>
 
       {/* TASK LIST */}
       <div className="grid gap-4">
         {tasks.map(t => (
-          <div
-            key={t._id}
-            className="bg-white p-5 rounded-xl shadow flex justify-between items-center"
-          >
+          <div key={t._id}
+            className="bg-[#0b1220]/80 p-5 rounded-xl flex justify-between items-center">
+
             <div>
-              <h3 className="font-semibold text-lg">{t.title}</h3>
-              <p className={`text-sm ${
-                t.status === "Completed" ? "text-green-600" : "text-yellow-600"
+              <h3 className="text-lg">{t.title}</h3>
+
+              <p className="text-sm text-gray-400">
+                Assigned: {t.assignedTo}
+              </p>
+
+              <span className={`text-sm ${
+                t.status === "Completed"
+                  ? "text-green-400"
+                  : "text-yellow-400"
               }`}>
                 {t.status}
-              </p>
+              </span>
             </div>
 
             <div className="flex gap-2">
-              <button
-                onClick={() => updateStatus(t._id, "Completed")}
-                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
-              >
-                Done
-              </button>
 
-              <button
-                onClick={() => updateStatus(t._id, "Pending")}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
-              >
-                Pending
-              </button>
+              {/* STATUS BUTTON */}
+              {t.status === "Pending" ? (
+                <button
+                  onClick={() => updateStatus(t._id, "Completed")}
+                  className="bg-green-500 px-3 py-1 rounded"
+                >
+                  Done
+                </button>
+              ) : (
+                <button
+                  onClick={() => updateStatus(t._id, "Pending")}
+                  className="bg-yellow-500 px-3 py-1 rounded"
+                >
+                  Undo
+                </button>
+              )}
+
+              {/* DELETE ONLY FOR ADMIN */}
+              {userRole === "Admin" && (
+                <button
+                  onClick={() => deleteTask(t._id)}
+                  className="bg-red-500 px-3 py-1 rounded"
+                >
+                  Delete
+                </button>
+              )}
+
             </div>
           </div>
         ))}
       </div>
-
     </div>
   );
 }
+
+// 🔥 Reusable stat component
+const Stat = ({ title, value, color }) => (
+  <div className="bg-[#0b1220]/80 p-5 rounded-xl">
+    <p className="text-gray-400">{title}</p>
+    <h2 className={`text-3xl font-bold ${color || ""}`}>{value}</h2>
+  </div>
+);

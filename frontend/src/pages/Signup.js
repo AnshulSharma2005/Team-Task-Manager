@@ -4,6 +4,7 @@ import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import toast from "react-hot-toast";
+import axios from "axios";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -21,35 +22,50 @@ const Signup = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const categories = ["ADMIN", "MEMBER"];
+  const categories = ["Admin", "Member"]; // 🔥 FIXED (case sensitive)
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // 🔥 FIREBASE SIGNUP
+  // 🔥 SIGNUP FLOW (Firebase + MongoDB)
   const handleSignup = async (e) => {
     e.preventDefault();
 
     if (!form.name || !form.email || !form.password || !form.confirmPassword) {
-      toast.error("Please fill all fields ❌");
-      return;
+      return toast.error("Please fill all fields ❌");
     }
 
     if (!form.category) {
-      toast.error("Please select a category ❌");
-      return;
+      return toast.error("Please select a role ❌");
     }
 
     if (form.password !== form.confirmPassword) {
-      toast.error("Passwords do not match ❌");
-      return;
+      return toast.error("Passwords do not match ❌");
     }
 
     try {
       setLoading(true);
 
-      await createUserWithEmailAndPassword(auth, form.email, form.password);
+      // 🔐 Firebase signup
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        form.email,
+        form.password
+      );
+
+      const user = userCredential.user;
+
+      // 🗄️ Save user in backend (MongoDB)
+      await axios.post("http://localhost:5000/api/users", {
+        name: form.name,
+        email: user.email,
+        role: form.category
+      });
+
+      // 🔥 Store in localStorage
+      localStorage.setItem("userEmail", user.email);
+      localStorage.setItem("userRole", form.category);
 
       toast.success("Account created successfully 🎉");
 
@@ -58,7 +74,14 @@ const Signup = () => {
       }, 1500);
 
     } catch (error) {
-      toast.error(error.message);
+      console.error(error);
+
+      if (error.code === "auth/email-already-in-use") {
+        toast.error("Email already registered. Please login.");
+      } else {
+        toast.error(error.message);
+      }
+
     } finally {
       setLoading(false);
     }
@@ -85,116 +108,46 @@ const Signup = () => {
         <form onSubmit={handleSignup} className="space-y-5">
 
           {/* Name */}
-          <div>
-            <label className="text-gray-300 text-sm">Full Name</label>
-            <div className="flex items-center mt-1 bg-[#1f2937] rounded-lg px-3
-            border border-gray-600
-            hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-400/20
-            focus-within:border-cyan-400 transition">
-
-              <User size={18} className="text-gray-400 mr-2" />
-              <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Enter your name"
-                className="w-full bg-transparent outline-none py-3 text-white"
-              />
-            </div>
-          </div>
+          <InputField icon={<User size={18} />} name="name" value={form.name}
+            placeholder="Enter your name" onChange={handleChange} />
 
           {/* Email */}
-          <div>
-            <label className="text-gray-300 text-sm">Email</label>
-            <div className="flex items-center mt-1 bg-[#1f2937] rounded-lg px-3
-            border border-gray-600
-            hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-400/20
-            focus-within:border-cyan-400 transition">
-
-              <Mail size={18} className="text-gray-400 mr-2" />
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="Enter your email"
-                className="w-full bg-transparent outline-none py-3 text-white"
-              />
-            </div>
-          </div>
+          <InputField icon={<Mail size={18} />} name="email" value={form.email}
+            placeholder="Enter your email" onChange={handleChange} />
 
           {/* Password */}
-          <div>
-            <label className="text-gray-300 text-sm">Password</label>
-            <div className="flex items-center mt-1 bg-[#1f2937] rounded-lg px-3
-            border border-gray-600
-            hover:border-purple-400 hover:shadow-lg hover:shadow-purple-400/20
-            focus-within:border-purple-400 transition">
-
-              <Lock size={18} className="text-gray-400 mr-2" />
-
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="Enter password"
-                className="flex-1 bg-transparent outline-none py-3 text-white"
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-gray-400 hover:text-cyan-400"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
+          <PasswordField
+            label="Password"
+            value={form.password}
+            name="password"
+            show={showPassword}
+            toggle={() => setShowPassword(!showPassword)}
+            onChange={handleChange}
+          />
 
           {/* Confirm Password */}
-          <div>
-            <label className="text-gray-300 text-sm">Confirm Password</label>
-            <div className="flex items-center mt-1 bg-[#1f2937] rounded-lg px-3
-            border border-gray-600
-            hover:border-purple-400 hover:shadow-lg hover:shadow-purple-400/20
-            focus-within:border-purple-400 transition">
-
-              <Lock size={18} className="text-gray-400 mr-2" />
-
-              <input
-                type={showConfirm ? "text" : "password"}
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm password"
-                className="flex-1 bg-transparent outline-none py-3 text-white"
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowConfirm(!showConfirm)}
-                className="text-gray-400 hover:text-cyan-400"
-              >
-                {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
+          <PasswordField
+            label="Confirm Password"
+            value={form.confirmPassword}
+            name="confirmPassword"
+            show={showConfirm}
+            toggle={() => setShowConfirm(!showConfirm)}
+            onChange={handleChange}
+          />
 
           {/* Category */}
           <div>
-            <label className="text-gray-300 text-sm">Category</label>
+            <label className="text-gray-300 text-sm">Role</label>
 
             <div className="relative mt-1">
               <div
                 onClick={() => setOpenDropdown(!openDropdown)}
                 className="bg-[#1f2937] rounded-lg px-4 py-3 text-white cursor-pointer
-                border border-gray-600
-                hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-400/20
+                border border-gray-600 hover:border-cyan-400
+                hover:shadow-lg hover:shadow-cyan-400/20
                 transition flex justify-between items-center"
               >
-                {form.category || "Select category"}
+                {form.category || "Select role"}
                 <span className="text-gray-400">▼</span>
               </div>
 
@@ -243,5 +196,44 @@ const Signup = () => {
     </div>
   );
 };
+
+// 🔥 Reusable components (clean UI)
+
+const InputField = ({ icon, ...props }) => (
+  <div>
+    <div className="flex items-center mt-1 bg-[#1f2937] rounded-lg px-3
+    border border-gray-600 hover:border-cyan-400
+    hover:shadow-lg hover:shadow-cyan-400/20
+    focus-within:border-cyan-400 transition">
+      <span className="text-gray-400 mr-2">{icon}</span>
+      <input {...props}
+        className="w-full bg-transparent outline-none py-3 text-white" />
+    </div>
+  </div>
+);
+
+const PasswordField = ({ label, show, toggle, ...props }) => (
+  <div>
+    <label className="text-gray-300 text-sm">{label}</label>
+    <div className="flex items-center mt-1 bg-[#1f2937] rounded-lg px-3
+    border border-gray-600 hover:border-purple-400
+    hover:shadow-lg hover:shadow-purple-400/20
+    focus-within:border-purple-400 transition">
+
+      <Lock size={18} className="text-gray-400 mr-2" />
+
+      <input
+        type={show ? "text" : "password"}
+        {...props}
+        className="flex-1 bg-transparent outline-none py-3 text-white"
+      />
+
+      <button type="button" onClick={toggle}
+        className="text-gray-400 hover:text-cyan-400">
+        {show ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+  </div>
+);
 
 export default Signup;

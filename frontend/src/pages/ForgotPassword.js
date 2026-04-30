@@ -1,13 +1,39 @@
 import React, { useState } from "react";
 import { Mail } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../firebase";
+import toast from "react-hot-toast";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleReset = (e) => {
+  const handleReset = async (e) => {
     e.preventDefault();
-    console.log("Reset link sent to:", email);
+
+    if (!email) {
+      toast.error("Please enter your email ❌");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await sendPasswordResetEmail(auth, email);
+
+      toast.success("Reset link sent to your email 📩");
+
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
+
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -15,7 +41,7 @@ const ForgotPassword = () => {
     bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#7c3aed]">
 
       <div className="bg-[#0b1220]/80 backdrop-blur-xl border border-white/10
-      rounded-3xl p-10 w-full max-w-md shadow-xl">
+      rounded-3xl p-10 w-full max-w-md shadow-xl hover:shadow-cyan-400/20 transition">
 
         {/* Header */}
         <div className="text-center mb-6">
@@ -34,20 +60,19 @@ const ForgotPassword = () => {
           <div>
             <label className="text-gray-300 text-sm">Email Address</label>
 
-            <div className="flex items-center mt-1 bg-white/10 rounded-lg px-3
-            border border-transparent
-            focus-within:border-cyan-400
-            hover:shadow-lg hover:shadow-cyan-500/20 transition">
+            <div className="flex items-center mt-1 bg-[#1f2937] rounded-lg px-3
+            border border-gray-600
+            hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-400/20
+            focus-within:border-cyan-400 transition">
 
               <Mail size={18} className="text-gray-400 mr-2" />
 
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="w-full bg-transparent outline-none py-2 text-white"
+                className="w-full bg-transparent outline-none py-3 text-white"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
               />
             </div>
           </div>
@@ -55,11 +80,12 @@ const ForgotPassword = () => {
           {/* Button */}
           <button
             type="submit"
+            disabled={loading}
             className="w-full bg-gradient-to-r from-cyan-500 to-purple-500
             py-3 rounded-lg text-white font-semibold
-            hover:scale-105 transition duration-300 shadow-lg"
+            hover:scale-105 transition duration-300 shadow-lg disabled:opacity-60"
           >
-            Send Reset Link →
+            {loading ? "Sending..." : "Send Reset Link →"}
           </button>
 
           {/* Bottom */}

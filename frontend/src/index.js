@@ -3,6 +3,18 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { Toaster } from "react-hot-toast";
+
+<Toaster
+  position="top-center"
+  toastOptions={{
+    style: {
+      background: "#0b1220",
+      color: "#fff",
+      border: "1px solid #22d3ee"
+    }
+  }}
+/>
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

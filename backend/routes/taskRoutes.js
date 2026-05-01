@@ -2,6 +2,13 @@ const router = require('express').Router();
 const Task = require('../models/Task');
 
 router.post('/', async (req,res)=>{
+  const { createdBy, assignedTo, role } = req.body;
+
+  // 🔥 Prevent member assigning others
+  if (role !== "Admin" && assignedTo !== createdBy) {
+    return res.status(403).json({ error: "Not allowed" });
+  }
+
   const task = new Task(req.body);
   await task.save();
   res.json(task);

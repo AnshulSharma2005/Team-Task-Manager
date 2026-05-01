@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
-import { LogOut, PlusCircle } from "lucide-react";
+
+const API = "http://localhost:5000/api";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
@@ -12,50 +12,39 @@ export default function Dashboard() {
   const [title, setTitle] = useState("");
   const [selectedProject, setSelectedProject] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
-
   const [newProject, setNewProject] = useState("");
 
-  const navigate = useNavigate();
+  const storedUser = localStorage.getItem("user");
+  const user = storedUser ? JSON.parse(storedUser) : null;
 
-  const API = "http://localhost:5000/api/tasks";
+  if (!user) {
+    window.location.href = "/";
+    return null;
+  }
 
-  const userEmail = localStorage.getItem("userEmail");
-  const userRole = localStorage.getItem("userRole");
+  // ✅ ONLY MEMBERS (fix)
+  const filteredUsers = users.filter(
+    (u) =>
+      u.email &&
+      u.email !== user.email &&
+      u.role === "Member"
+  );
 
   // ================= FETCH =================
 
   const fetchTasks = async () => {
-    try {
-      let url = API;
-
-      // 🔥 Member sees only assigned tasks
-      if (userRole === "Member") {
-        url = `${API}?assignedTo=${userEmail}`;
-      }
-
-      const res = await axios.get(url);
-      setTasks(res.data);
-    } catch {
-      toast.error("Failed to load tasks ❌");
-    }
+    const res = await axios.get(`${API}/tasks`);
+    setTasks(res.data || []);
   };
 
   const fetchProjects = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/projects");
-      setProjects(res.data);
-    } catch {
-      toast.error("Failed to load projects ❌");
-    }
+    const res = await axios.get(`${API}/projects`);
+    setProjects(res.data || []);
   };
 
   const fetchUsers = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/users");
-      setUsers(res.data);
-    } catch {
-      toast.error("Failed to load users ❌");
-    }
+    const res = await axios.get(`${API}/users/all`);
+    setUsers(res.data || []);
   };
 
   useEffect(() => {
@@ -64,82 +53,62 @@ export default function Dashboard() {
     fetchUsers();
   }, []);
 
+  // ================= PROJECT =================
+
+  const createProject = async () => {
+    if (!newProject) return toast.error("Enter project name");
+
+    await axios.post(`${API}/projects`, {
+      name: newProject,
+      createdBy: user.email,
+    });
+
+    toast.success("Project created 🚀");
+    setNewProject("");
+    fetchProjects();
+  };
+
   // ================= ADD TASK =================
 
   const addTask = async () => {
-    if (!title) return toast.error("Task title required ❌");
-    if (!selectedProject) return toast.error("Select project ❌");
-    if (!assignedTo) return toast.error("Assign user ❌");
+    if (!title) return toast.error("Task cannot be empty");
+    if (!selectedProject) return toast.error("Select project");
 
-    try {
-      await axios.post(API, {
-        title,
-        status: "Pending",
-        createdBy: userEmail,
-        assignedTo,
-        projectId: selectedProject,
-        priority: "Medium",
-        deadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
-      });
-
-      toast.success("Task added 🚀");
-      setTitle("");
-      fetchTasks();
-    } catch {
-      toast.error("Error adding task ❌");
+    // ✅ ADMIN MUST SELECT MEMBER
+    if (user.role === "Admin" && !assignedTo) {
+      return toast.error("Please assign a member ❌");
     }
+
+    await axios.post(`${API}/tasks`, {
+      title,
+      projectId: selectedProject,
+      assignedTo:
+        user.role === "Admin"
+          ? assignedTo // ✅ FIXED (no fallback)
+          : user.email,
+      createdBy: user.email,
+      status: "Pending",
+    });
+
+    toast.success("Task added");
+    setTitle("");
+    setAssignedTo("");
+    fetchTasks();
   };
 
   // ================= UPDATE =================
 
   const updateStatus = async (id, status) => {
-    try {
-      await axios.put(`${API}/${id}`, { status });
-      toast.success("Updated");
-      fetchTasks();
-    } catch {
-      toast.error("Update failed");
-    }
+    await axios.put(`${API}/tasks/${id}`, { status });
+    fetchTasks();
   };
 
   const deleteTask = async (id) => {
-    try {
-      await axios.delete(`${API}/${id}`);
-      toast.success("Deleted");
-      fetchTasks();
-    } catch {
-      toast.error("Delete failed");
-    }
+    await axios.delete(`${API}/tasks/${id}`);
+    fetchTasks();
   };
 
-  // ================= PROJECT =================
-
-  const createProject = async () => {
-    if (!newProject) return toast.error("Enter project name ❌");
-
-    try {
-      await axios.post("http://localhost:5000/api/projects", {
-        name: newProject,
-        createdBy: userEmail
-      });
-
-      toast.success("Project created 🎉");
-      setNewProject("");
-      fetchProjects();
-    } catch {
-      toast.error("Error creating project");
-    }
-  };
-
-  // ================= LOGOUT =================
-
-  const handleLogout = () => {
-    localStorage.clear();
-    toast.success("Logged out");
-    navigate("/");
-  };
-
-  // ================= LOGIC =================
+  // ================= FILTER =================
 
   const filteredTasks = selectedProject
     ? tasks.filter((t) => t.projectId === selectedProject)
@@ -151,47 +120,67 @@ export default function Dashboard() {
 
   const pending = filteredTasks.length - completed;
 
-  const isOverdue = (deadline) =>
-    deadline && new Date(deadline) < new Date();
-
-  // ================= UI =================
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#7c3aed] p-6 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#7c3aed] p-6">
 
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">
-          🚀 Dashboard ({userRole})
-        </h1>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-white">
+            🚀 Dashboard: {user.role}
+          </h1>
+          <p className="text-gray-300 text-sm">
+            {user.name} (Currently logged in {user.role})
+          </p>
+        </div>
 
         <button
-          onClick={handleLogout}
-          className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg flex items-center gap-2"
+          onClick={() => {
+            localStorage.clear();
+            window.location.href = "/";
+          }}
+          className="bg-red-500 px-4 py-2 rounded text-white"
         >
-          <LogOut size={18} /> Logout
+          Logout
         </button>
       </div>
 
       {/* STATS */}
-      <div className="grid md:grid-cols-3 gap-5 mb-8">
-        <Stat title="Total Tasks" value={filteredTasks.length} />
-        <Stat title="Completed" value={completed} color="text-green-400" />
-        <Stat title="Pending" value={pending} color="text-yellow-400" />
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
+        <Card title="Total Tasks" value={filteredTasks.length} />
+        <Card title="Completed" value={completed} />
+        <Card title="Pending" value={pending} />
       </div>
 
-      {/* ADMIN: CREATE PROJECT */}
-      {userRole === "Admin" && (
-        <div className="flex gap-3 mb-6">
+      {/* 👥 MEMBERS LIST */}
+      {user.role === "Admin" && (
+        <div className="mb-6 bg-[#0b1220]/80 p-4 rounded-xl text-white">
+          <h2 className="font-semibold mb-2">Team Members</h2>
+
+          {filteredUsers.length === 0 ? (
+            <p className="text-gray-400">No members</p>
+          ) : (
+            filteredUsers.map((u) => (
+              <p key={u._id}>
+                • {u.name} ({u.email})
+              </p>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* CREATE PROJECT */}
+      {user.role === "Admin" && (
+        <div className="flex gap-3 mb-4">
           <input
             value={newProject}
             onChange={(e) => setNewProject(e.target.value)}
             placeholder="Create new project..."
-            className="flex-1 bg-white/10 p-3 rounded-lg"
+            className="flex-1 bg-[#1f2937] text-white px-3 py-3 rounded-lg"
           />
           <button
             onClick={createProject}
-            className="bg-purple-500 px-5 rounded-lg"
+            className="bg-purple-500 px-4 rounded text-white"
           >
             Create
           </button>
@@ -202,7 +191,7 @@ export default function Dashboard() {
       <select
         value={selectedProject}
         onChange={(e) => setSelectedProject(e.target.value)}
-        className="w-full bg-white/10 p-3 rounded-lg mb-6"
+        className="w-full mb-4 bg-[#1f2937] text-white px-3 py-3 rounded-lg"
       >
         <option value="">All Projects</option>
         {projects.map((p) => (
@@ -213,99 +202,96 @@ export default function Dashboard() {
       </select>
 
       {/* ADD TASK */}
-      <div className="bg-[#0b1220]/80 p-5 rounded-xl flex gap-3 mb-8">
-
+      <div className="flex gap-3 mb-6">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Enter task..."
-          className="flex-1 bg-white/10 p-3 rounded-lg"
+          className="flex-1 bg-[#1f2937] text-white px-3 py-3 rounded-lg"
         />
 
-        {/* ASSIGN USER */}
-        {userRole === "Admin" && (
+        {user.role === "Admin" && (
           <select
             value={assignedTo}
             onChange={(e) => setAssignedTo(e.target.value)}
-            className="bg-white/10 p-3 rounded-lg"
+            className="bg-[#1f2937] text-white px-3 py-3 rounded-lg"
           >
-            <option value="">Assign user</option>
-            {users.map((u) => (
-              <option key={u._id} value={u.email}>
-                {u.email}
-              </option>
-            ))}
+            <option value="">Assign member</option>
+
+            {filteredUsers.length === 0 ? (
+              <option disabled>No members available</option>
+            ) : (
+              filteredUsers.map((u) => (
+                <option key={u._id} value={u.email}>
+                  {u.name} 
+                </option>
+              ))
+            )}
           </select>
         )}
 
         <button
           onClick={addTask}
-          className="bg-gradient-to-r from-cyan-500 to-purple-500 px-4 rounded-lg"
+          className="bg-gradient-to-r from-cyan-500 to-purple-500 px-5 rounded-lg text-white"
         >
-          <PlusCircle />
+          + Add
         </button>
       </div>
 
-      {/* TASK LIST */}
-      <div className="grid gap-4">
+      {/* TASKS */}
+      <div className="space-y-4">
         {filteredTasks.map((t) => (
           <div
             key={t._id}
-            className="bg-[#0b1220]/80 p-5 rounded-xl flex justify-between items-center"
+            className="bg-[#0b1220]/80 p-5 rounded-xl flex justify-between"
           >
-
             <div>
-              <h3 className="font-semibold text-lg">{t.title}</h3>
-
-              <p className="text-sm text-gray-400">
+              <h3 className="text-white">{t.title}</h3>
+              <p className="text-gray-400 text-sm">
                 Assigned: {t.assignedTo}
               </p>
 
-              <p className="text-xs text-gray-400">
-                Due: {new Date(t.deadline).toLocaleDateString()}
-              </p>
-
               <span
-                className={`px-3 py-1 text-sm rounded-full ${
-                  isOverdue(t.deadline)
-                    ? "bg-red-500/20 text-red-400"
-                    : t.status === "Completed"
-                    ? "bg-green-500/20 text-green-400"
-                    : "bg-yellow-500/20 text-yellow-400"
+                className={`px-2 py-1 text-xs rounded ${
+                  t.status === "Completed"
+                    ? "bg-green-500"
+                    : "bg-yellow-500"
                 }`}
               >
-                {isOverdue(t.deadline) ? "Overdue 🔴" : t.status}
+                {t.status}
               </span>
             </div>
 
             <div className="flex gap-2">
-
-              {t.status === "Pending" ? (
+              {t.status !== "Completed" ? (
                 <button
-                  onClick={() => updateStatus(t._id, "Completed")}
-                  className="bg-green-500 px-3 py-1 rounded"
+                  onClick={() =>
+                    updateStatus(t._id, "Completed")
+                  }
+                  className="bg-green-500 px-3 py-1 rounded text-white"
                 >
                   Done
                 </button>
               ) : (
                 <button
-                  onClick={() => updateStatus(t._id, "Pending")}
-                  className="bg-yellow-500 px-3 py-1 rounded"
+                  onClick={() =>
+                    updateStatus(t._id, "Pending")
+                  }
+                  className="bg-yellow-500 px-3 py-1 rounded text-white"
                 >
                   Undo
                 </button>
               )}
 
-              {userRole === "Admin" && (
+              {user.role === "Admin" && (
                 <button
                   onClick={() => deleteTask(t._id)}
-                  className="bg-red-500 px-3 py-1 rounded"
+                  className="bg-red-500 px-3 py-1 rounded text-white"
                 >
                   Delete
                 </button>
               )}
             </div>
-
           </div>
         ))}
       </div>
@@ -313,10 +299,9 @@ export default function Dashboard() {
   );
 }
 
-// STAT CARD
-const Stat = ({ title, value, color }) => (
-  <div className="bg-[#0b1220]/80 p-5 rounded-xl">
-    <p className="text-gray-400">{title}</p>
-    <h2 className={`text-3xl font-bold ${color || ""}`}>{value}</h2>
+const Card = ({ title, value }) => (
+  <div className="bg-[#0b1220]/80 p-5 rounded-xl text-white">
+    <p>{title}</p>
+    <h2 className="text-2xl font-bold">{value}</h2>
   </div>
 );

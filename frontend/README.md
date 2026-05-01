@@ -1,70 +1,166 @@
-# Getting Started with Create React App
+# 🚀 Team Task Manager (Full-Stack)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack web application that allows teams to create projects, assign tasks, and track progress with **role-based access (Admin & Member)**.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🌐 Live Application
+👉 https://your-frontend-url.com  
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 📂 GitHub Repository
+👉 https://github.com/your-username/your-repo-name  
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## 🎯 Features
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 🔐 Authentication
+- User Signup & Login using Firebase
+- Secure authentication flow
+- Role-based access (Admin / Member)
 
-### `npm run build`
+### 👥 Role-Based Access
+- **Admin**
+  - Create projects
+  - View all team members
+  - Assign tasks to members
+  - Delete tasks
+- **Member**
+  - View assigned tasks
+  - Mark tasks as completed
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 📁 Project Management
+- Create multiple projects
+- View tasks project-wise
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### ✅ Task Management
+- Create tasks
+- Assign tasks to specific members
+- Track status (Pending / Completed)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 📊 Dashboard
+- Total tasks count
+- Completed tasks
+- Pending tasks
+- Dynamic updates in real-time
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🛠️ Tech Stack
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Frontend
+- React.js
+- Tailwind CSS
+- React Router
+- Axios
+- Firebase Authentication
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Backend
+- Node.js
+- Express.js
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Database
+- MongoDB (Mongoose)
 
 ### Deployment
+- Backend: Railway 🚂
+- Frontend: Vercel / Netlify 🌐
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## ⚙️ Environment Variables
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Backend (.env)
+PORT = 5000 🚂
+MONGO_URL = mongodb://anshulsharma09082022_db_user:kr7BzFIKttJQg4Y7@ac-jpfiv3v-shard-00-00.rlf5unl.mongodb.net:27017,ac-jpfiv3v-shard-00-01.rlf5unl.mongodb.net:27017,ac-jpfiv3v-shard-00-02.rlf5unl.mongodb.net:27017/taskmanager?ssl=true&replicaSet=atlas-bipa4e-shard-0&authSource=admin&retryWrites=true&w=majority
+
+
+### Frontend
+
+REACT_APP_API_URL=https://your-backend-url/api
+
+
+---
+
+## 🚀 Installation & Setup (Local)
+
+### 1. Clone the repository
+
+git clone https://github.com/AnshulSharma2005/Team-Task-Manager.git
+
+cd Team-Task-Manager
+
+
+---
+
+### 2. Backend Setup
+
+cd backend
+npm install
+npm start
+
+
+---
+
+### 3. Frontend Setup
+
+cd frontend
+npm install
+npm start
+
+
+---
+
+## 🔄 API Endpoints
+
+### User Routes
+- `POST /api/users/signup` → Register user  
+- `GET /api/users/:email` → Get user by email  
+- `GET /api/users/all` → Get all users  
+
+### Task Routes
+- `POST /api/tasks` → Create task  
+- `GET /api/tasks` → Get all tasks  
+- `PUT /api/tasks/:id` → Update task status  
+- `DELETE /api/tasks/:id` → Delete task  
+
+---
+
+## 📸 Demo Flow
+
+1. User Signup/Login  
+2. Admin Dashboard  
+3. Create Project  
+4. Assign Task to Member  
+5. Member Login  
+6. View Assigned Task  
+7. Mark Task as Completed  
+8. Dashboard updates automatically  
+
+---
+
+## 📦 Submission Details
+
+- ✔ Live Application URL  
+- ✔ GitHub Repository  
+- ✔ README File  
+- ✔ Demo Video (2–5 min)  
+
+---
+
+## ⚠️ Notes
+- Make sure backend is deployed on Railway
+- Replace API URLs with live backend URL
+- Do not use localhost in production
+
+---
+
+## 👨‍💻 Author
+Anshul Sharma  
+
+---
+
+## ⭐ Acknowledgement
+This project was built as part of a full-stack assignment to demonstrate real-world development skills including authentication, API integration, and role-based access control.

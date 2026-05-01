@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
-const API = "http://localhost:5000/api";
+const API = "https://team-task-manager-production-3a08.up.railway.app/api";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState([]);

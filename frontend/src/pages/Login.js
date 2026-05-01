@@ -6,7 +6,7 @@ import { auth } from "../firebase";
 import axios from "axios";
 import toast from "react-hot-toast";
 
-const API = "http://localhost:5000/api";
+const API = "https://team-task-manager-production-3a08.up.railway.app/api";
 
 const quotes = [
   "Small wins compound into massive success when you stay consistent over time.",

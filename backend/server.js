@@ -5,9 +5,9 @@ require('dotenv').config();
 
 const app = express();
 
-// ✅ FIXED CORS (important)
+// ✅ FIXED CORS (for deployment)
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: "*",
   credentials: true
 }));
 
@@ -25,5 +25,7 @@ app.use('/api/users', require('./routes/userRoutes'));
 
 app.get('/', (req,res)=> res.send("API Running"));
 
-// ✅ Server start
-app.listen(5000, ()=> console.log("Server running on port 5000"));
+// ✅ FIXED PORT
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

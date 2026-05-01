@@ -17,4 +17,9 @@ router.put('/:id', async (req,res)=>{
   res.json(updated);
 });
 
+router.delete("/:id", async (req, res) => {
+  await Task.findByIdAndDelete(req.params.id);
+  res.json({ message: "Deleted" });
+});
+
 module.exports = router;

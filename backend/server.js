@@ -20,7 +20,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 // ✅ Routes
 app.use('/api/tasks', require('./routes/taskRoutes'));
-app.use('/api/projects', require('./routes/projectRoutes'));
+app.use("/api/projects", require("./routes/projectRoutes"));
 app.use('/api/users', require('./routes/userRoutes'));
 
 app.get('/', (req,res)=> res.send("API Running"));

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 
-// ✅ CREATE USER
+// CREATE USER
 router.post("/", async (req, res) => {
   try {
     const { name, email, role } = req.body;
@@ -21,14 +21,12 @@ router.post("/", async (req, res) => {
   }
 });
 
-// ✅ GET ALL USERS (ONLY ONE)
+// GET ALL USERS (ONLY ONE ROUTE)
 router.get("/all", async (req, res) => {
   try {
     console.log("HIT /api/users/all");
 
     const users = await User.find();
-
-    console.log("USERS:", users);
 
     res.json(users);
   } catch (error) {
@@ -37,7 +35,7 @@ router.get("/all", async (req, res) => {
   }
 });
 
-// ✅ GET USER BY EMAIL
+// GET USER BY EMAIL
 router.get("/:email", async (req, res) => {
   try {
     const user = await User.findOne({ email: req.params.email });

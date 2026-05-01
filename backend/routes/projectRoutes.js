@@ -17,11 +17,17 @@ router.post("/", async (req, res) => {
 // GET PROJECTS
 router.get("/", async (req, res) => {
   try {
+    console.log("🔥 HIT /api/projects");
+
     const projects = await Project.find();
+
+    console.log("✅ PROJECTS:", projects);
+
     res.json(projects);
+
   } catch (error) {
-    console.error("ERROR IN GET PROJECTS:", error);
-    res.status(500).json({ message: "Server Error" });
+    console.error("❌ ERROR IN /projects:", error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 

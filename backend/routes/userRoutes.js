@@ -24,14 +24,17 @@ router.post("/", async (req, res) => {
 // GET ALL USERS (ONLY ONE ROUTE)
 router.get("/all", async (req, res) => {
   try {
-    console.log("HIT /api/users/all");
+    console.log("🔥 HIT /api/users/all");
 
     const users = await User.find();
 
+    console.log("✅ USERS FETCHED:", users);
+
     res.json(users);
+
   } catch (error) {
-    console.error("ERROR IN /users/all:", error);
-    res.status(500).json({ message: "Server Error" });
+    console.error("❌ ERROR IN /users/all:", error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 

@@ -21,13 +21,19 @@ router.post('/', async (req, res) => {
 });
 
 // GET TASKS
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
   try {
+    console.log("🔥 HIT /api/tasks");
+
     const tasks = await Task.find();
+
+    console.log("✅ TASKS:", tasks);
+
     res.json(tasks);
+
   } catch (error) {
-    console.error("ERROR IN GET TASKS:", error);
-    res.status(500).json({ message: "Server Error" });
+    console.error("❌ ERROR IN /tasks:", error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 

@@ -48,8 +48,9 @@ const Signup = () => {
       );
 
       const user = userCredential.user;
+      const API = "https://team-task-manager-production-3a08.up.railway.app/api";
 
-      await axios.post("http://localhost:5000/api/users", {
+      await axios.post(`${API}/users`, { 
         name: form.name,
         email: user.email,
         role: form.role,
